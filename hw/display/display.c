@@ -22,12 +22,14 @@
 #include <string.h>
 #include <errno.h>
 #include <linux/limits.h>
+#include <X11/Xlib.h>
+#include <X11/extensions/dpms.h>
 
-#include <hw/backlight.h>
-#include "shared.h"
+#include <hw/display.h>
+#include "../shared.h"
 
 #ifndef BACKLIGHT_PATH
-#define BACKLIGHT_PATH	"/sys/class/backlight/s6e8aa0-bl"
+#define BACKLIGHT_PATH  "/sys/class/backlight/s6e3ha2"
 #endif
 
 static int get_max_brightness(int *val)
@@ -48,7 +50,7 @@ static int get_max_brightness(int *val)
 	return 0;
 }
 
-static int backlight_get_brightness(int *brightness)
+static int display_get_brightness(int *brightness)
 {
 	int r, v;
 
@@ -67,7 +69,7 @@ static int backlight_get_brightness(int *brightness)
 	return 0;
 }
 
-static int backlight_set_brightness(int brightness)
+static int display_set_brightness(int brightness)
 {
 	int r, v, max;
 
@@ -92,50 +94,86 @@ static int backlight_set_brightness(int brightness)
 	return 0;
 }
 
-static int backlight_get_mode(enum backlight_mode *mode)
+static int display_get_power_state(enum display_state *state)
 {
-	if (!mode) {
-		_E("wrong parameter");
+	Display *dpy;
+	int dummy;
+	CARD16 dpms_state = DPMSModeOff;
+	BOOL onoff;
+
+	dpy = XOpenDisplay(NULL);
+	if (dpy == NULL) {
+		_E("fail to open display");
+		return -EPERM;
+	}
+
+	if (DPMSQueryExtension(dpy, &dummy, &dummy)) {
+		if (DPMSCapable(dpy)) {
+			DPMSInfo(dpy, &dpms_state, &onoff);
+		}
+	}
+
+	XCloseDisplay(dpy);
+
+	if (state)
+		*state = dpms_state;
+
+	return 0;
+}
+
+static int display_set_power_state(enum display_state state)
+{
+	int type;
+	Display *dpy;
+
+	if (state == DISPLAY_ON)
+		type = DPMSModeOn;
+	else if (state == DISPLAY_STANDBY)
+		type = DPMSModeStandby;
+	else if (state == DISPLAY_SUSPEND)
+		type = DPMSModeSuspend;
+	else if (state == DISPLAY_OFF)
+		type = DPMSModeOff;
+	else
 		return -EINVAL;
+
+	dpy = XOpenDisplay(NULL);
+	if (dpy == NULL) {
+		_E("fail to open display");
+		return -EPERM;
 	}
 
-	*mode = BACKLIGHT_MANUAL;
+	DPMSEnable(dpy);
+	DPMSForceLevel(dpy, type);
+
+	XCloseDisplay(dpy);
+
 	return 0;
 }
 
-static int backlight_set_mode(enum backlight_mode mode)
-{
-	if (mode == BACKLIGHT_SENSOR) {
-		_E("not supported option");
-		return -ENOTSUP;
-	}
-
-	return 0;
-}
-
-static int backlight_open(struct hw_info *info,
+static int display_open(struct hw_info *info,
 		const char *id, struct hw_common **common)
 {
-	struct backlight_device *backlight_dev;
+	struct display_device *display_dev;
 
 	if (!info || !common)
 		return -EINVAL;
 
-	backlight_dev = calloc(1, sizeof(struct backlight_device));
-	if (!backlight_dev)
+	display_dev = calloc(1, sizeof(struct display_device));
+	if (!display_dev)
 		return -ENOMEM;
 
-	backlight_dev->common.info = info;
-	backlight_dev->get_brightness = backlight_get_brightness;
-	backlight_dev->set_brightness = backlight_set_brightness;
-	backlight_dev->get_mode = backlight_get_mode;
-	backlight_dev->set_mode = backlight_set_mode;
+	display_dev->common.info = info;
+	display_dev->get_brightness = display_get_brightness;
+	display_dev->set_brightness = display_set_brightness;
+	display_dev->get_state = display_get_power_state;
+	display_dev->set_state = display_set_power_state;
 
-	*common = (struct hw_common *)backlight_dev;
+	*common = (struct hw_common *)display_dev;
 	return 0;
 }
 
-static int backlight_close(struct hw_common *common)
+static int display_close(struct hw_common *common)
 {
 	if (!common)
 		return -EINVAL;
@@ -147,10 +185,9 @@ static int backlight_close(struct hw_common *common)
 HARDWARE_MODULE_STRUCTURE = {
 	.magic = HARDWARE_INFO_TAG,
 	.hal_version = HARDWARE_INFO_VERSION,
-	.device_version = BACKLIGHT_HARDWARE_DEVICE_VERSION,
-	.id = BACKLIGHT_HARDWARE_DEVICE_ID,
-	.name = "Default Backlight",
-	.author = "Jiyoung Yun <jy910.yun@samsung.com>",
-	.open = backlight_open,
-	.close = backlight_close,
+	.device_version = DISPLAY_HARDWARE_DEVICE_VERSION,
+	.id = DISPLAY_HARDWARE_DEVICE_ID,
+	.name = "Display",
+	.open = display_open,
+	.close = display_close,
 };

@@ -24,7 +24,7 @@
 #include <linux/limits.h>
 
 #include <hw/led.h>
-#include "shared.h"
+#include "../shared.h"
 
 #ifndef CAMERA_BACK_PATH
 #define CAMERA_BACK_PATH	"/sys/class/leds/ktd2692"

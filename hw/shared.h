@@ -21,7 +21,7 @@
 #define __HW_DEFAULT_SHARED_H__
 
 #define FEATURE_HARDWARE_DLOG
-#ifndef FEATURE_HARDWARE_DLOG
+#ifdef FEATURE_HARDWARE_DLOG
 #define LOG_TAG	"HARDWARE"
 #include <dlog.h>
 #define _I(fmt, args...)	SLOGI(fmt, ##args)
@@ -32,6 +32,8 @@
 #define _D(x, ...)			do { } while (0)
 #define _E(x, ...)			do { } while (0)
 #endif
+
+#define ARRAY_SIZE(name) (sizeof(name)/sizeof(name[0]))
 
 int sys_get_int(char *fname, int *val);
 int sys_get_str(char *fname, char *str, int len);

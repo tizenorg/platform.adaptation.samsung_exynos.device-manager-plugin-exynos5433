@@ -11,6 +11,8 @@ Requires(postun): /sbin/ldconfig
 BuildRequires:  cmake
 BuildRequires:  pkgconfig(dlog)
 BuildRequires:  pkgconfig(hwcommon)
+BuildRequires:  pkgconfig(x11)
+BuildRequires:  pkgconfig(xext)
 
 %description
 Device manager plugin exynos 5433
