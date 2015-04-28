@@ -1,3 +1,5 @@
+%bcond_with x
+
 Name:       device-manager-plugin-exynos5433
 Summary:    Device manager plugin exynos5433
 Version:    0.0.1
@@ -11,7 +13,7 @@ Requires(postun): /sbin/ldconfig
 BuildRequires:  cmake
 BuildRequires:  pkgconfig(dlog)
 BuildRequires:  pkgconfig(hwcommon)
-%if %{_with_x}
+%if %{with x}
 BuildRequires:  pkgconfig(x11)
 BuildRequires:  pkgconfig(xext)
 %endif
@@ -25,7 +27,7 @@ Device manager plugin exynos 5433
 cp %{SOURCE1} .
 
 %build
-%if %{_with_x}
+%if %{with x}
 %define X11_SUPPORT ON
 %else
 %define X11_SUPPORT OFF
