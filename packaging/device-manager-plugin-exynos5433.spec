@@ -11,8 +11,10 @@ Requires(postun): /sbin/ldconfig
 BuildRequires:  cmake
 BuildRequires:  pkgconfig(dlog)
 BuildRequires:  pkgconfig(hwcommon)
+%if %{_with_x}
 BuildRequires:  pkgconfig(x11)
 BuildRequires:  pkgconfig(xext)
+%endif
 
 %description
 Device manager plugin exynos 5433
@@ -21,8 +23,16 @@ Device manager plugin exynos 5433
 %prep
 %setup -q
 cp %{SOURCE1} .
+
 %build
-%cmake .
+%if %{_with_x}
+%define X11_SUPPORT ON
+%else
+%define X11_SUPPORT OFF
+%endif
+
+%cmake . -DX11_SUPPORT:BOOL=%{X11_SUPPORT}
+
 make %{?jobs:-j%jobs}
 
 %install
