@@ -22,8 +22,6 @@
 #include <string.h>
 #include <errno.h>
 #include <linux/limits.h>
-#include <X11/Xlib.h>
-#include <X11/extensions/dpms.h>
 
 #include <hw/display.h>
 #include "../shared.h"
@@ -94,63 +92,6 @@ static int display_set_brightness(int brightness)
 	return 0;
 }
 
-static int display_get_power_state(enum display_state *state)
-{
-	Display *dpy;
-	int dummy;
-	CARD16 dpms_state = DPMSModeOff;
-	BOOL onoff;
-
-	dpy = XOpenDisplay(NULL);
-	if (dpy == NULL) {
-		_E("fail to open display");
-		return -EPERM;
-	}
-
-	if (DPMSQueryExtension(dpy, &dummy, &dummy)) {
-		if (DPMSCapable(dpy)) {
-			DPMSInfo(dpy, &dpms_state, &onoff);
-		}
-	}
-
-	XCloseDisplay(dpy);
-
-	if (state)
-		*state = dpms_state;
-
-	return 0;
-}
-
-static int display_set_power_state(enum display_state state)
-{
-	int type;
-	Display *dpy;
-
-	if (state == DISPLAY_ON)
-		type = DPMSModeOn;
-	else if (state == DISPLAY_STANDBY)
-		type = DPMSModeStandby;
-	else if (state == DISPLAY_SUSPEND)
-		type = DPMSModeSuspend;
-	else if (state == DISPLAY_OFF)
-		type = DPMSModeOff;
-	else
-		return -EINVAL;
-
-	dpy = XOpenDisplay(NULL);
-	if (dpy == NULL) {
-		_E("fail to open display");
-		return -EPERM;
-	}
-
-	DPMSEnable(dpy);
-	DPMSForceLevel(dpy, type);
-
-	XCloseDisplay(dpy);
-
-	return 0;
-}
-
 static int display_open(struct hw_info *info,
 		const char *id, struct hw_common **common)
 {
@@ -166,8 +107,6 @@ static int display_open(struct hw_info *info,
 	display_dev->common.info = info;
 	display_dev->get_brightness = display_get_brightness;
 	display_dev->set_brightness = display_set_brightness;
-	display_dev->get_state = display_get_power_state;
-	display_dev->set_state = display_set_power_state;
 
 	*common = (struct hw_common *)display_dev;
 	return 0;

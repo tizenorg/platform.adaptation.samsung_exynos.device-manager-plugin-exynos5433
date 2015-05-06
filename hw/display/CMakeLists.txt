@@ -4,7 +4,7 @@ PROJECT(display C)
 SET(PREFIX ${CMAKE_INSTALL_PREFIX})
 
 INCLUDE(FindPkgConfig)
-pkg_check_modules(display_pkgs REQUIRED hwcommon dlog x11 xext)
+pkg_check_modules(display_pkgs REQUIRED hwcommon dlog)
 
 FOREACH(flag ${display_pkgs_CFLAGS})
 	SET(EXTRA_CFLAGS "${EXTRA_CFLAGS} ${flag}")
