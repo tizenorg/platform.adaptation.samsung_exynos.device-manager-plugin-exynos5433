@@ -27,7 +27,7 @@
 #include "../shared.h"
 
 #ifndef CAMERA_BACK_PATH
-#define CAMERA_BACK_PATH	"/sys/class/leds/ktd2692"
+#define CAMERA_BACK_PATH	"/sys/class/leds/ktd2692-flash"
 #endif
 
 static int camera_back_set_state(struct led_state *state)
