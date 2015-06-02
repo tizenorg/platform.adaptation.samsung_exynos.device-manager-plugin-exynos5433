@@ -30,6 +30,12 @@
 #define CAMERA_BACK_PATH	"/sys/class/leds/ktd2692-flash"
 #endif
 
+#ifndef TOUCH_KEY_PATH
+#define TOUCH_KEY_PATH          "/sys/class/leds/sec_touchkey"
+#endif
+
+#define GET_BRIGHTNESS(val)     (((val) >> 24) & 0xFF)
+
 static int camera_back_set_state(struct led_state *state)
 {
 	static int max = -1;
@@ -66,6 +72,34 @@ static int camera_back_set_state(struct led_state *state)
 	return 0;
 }
 
+static int touch_key_set_state(struct led_state *state)
+{
+	static int max = -1;
+	int brt, r;
+
+	if (!state)
+		return -EINVAL;
+
+	if (state->type == LED_TYPE_BLINK)
+		return -ENOTSUP;
+
+	/* if there is a max brightness of led */
+	if (max < 0) {
+		r = sys_get_int(TOUCH_KEY_PATH"/max_brightness", &max);
+		if (r < 0)
+			return r;
+	}
+
+	brt = GET_BRIGHTNESS(state->color);
+	brt = brt / 255.f * max;
+
+	r = sys_set_int(TOUCH_KEY_PATH"/brightness", brt);
+	if (r < 0)
+		return r;
+
+	return 0;
+}
+
 static int led_open(struct hw_info *info,
 		const char *id, struct hw_common **common)
 {
@@ -74,7 +108,8 @@ static int led_open(struct hw_info *info,
 	if (!info || !id || !common)
 		return -EINVAL;
 
-	if (strcmp(id, LED_ID_CAMERA_BACK) != 0)
+	if (strcmp(id, LED_ID_CAMERA_BACK) != 0 &&
+	    strcmp(id, LED_ID_TOUCH_KEY) != 0)
 		return -ENOTSUP;
 
 	led_dev = calloc(1, sizeof(struct led_device));
@@ -85,6 +120,8 @@ static int led_open(struct hw_info *info,
 
 	if (!strcmp(id, LED_ID_CAMERA_BACK))
 		led_dev->set_state = camera_back_set_state;
+	else if (!strcmp(id, LED_ID_TOUCH_KEY))
+		led_dev->set_state = touch_key_set_state;
 
 	*common = (struct hw_common *)led_dev;
 	return 0;
