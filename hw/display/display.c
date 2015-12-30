@@ -59,7 +59,7 @@ static int display_get_brightness(int *brightness)
 
 	r = sys_get_int(BACKLIGHT_PATH"/brightness", &v);
 	if (r < 0) {
-		_E("fail to get brightness : %s", strerror(r));
+		_E("fail to get brightness (errno:%d)", r);
 		return r;
 	}
 
@@ -78,14 +78,14 @@ static int display_set_brightness(int brightness)
 
 	r = get_max_brightness(&max);
 	if (r < 0) {
-		_E("fail to get max brightness : %s", strerror(r));
+		_E("fail to get max brightness (errno:%d)", r);
 		return r;
 	}
 
 	v = brightness/100.f*max;
 	r = sys_set_int(BACKLIGHT_PATH"/brightness", v);
 	if (r < 0) {
-		_E("fail to set brightness : %s", strerror(r));
+		_E("fail to set brightness (errno:%d)", r);
 		return r;
 	}
 

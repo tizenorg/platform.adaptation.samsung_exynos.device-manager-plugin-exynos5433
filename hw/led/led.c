@@ -55,7 +55,7 @@ static int camera_back_set_state(struct led_state *state)
 	if (max < 0) {
 		r = sys_get_int(CAMERA_BACK_PATH"/max_brightness", &max);
 		if (r < 0) {
-			_E("fail to get max brightness : %s", strerror(r));
+			_E("fail to get max brightness (errno:%d)", r);
 			return r;
 		}
 	}
@@ -65,7 +65,7 @@ static int camera_back_set_state(struct led_state *state)
 
 	r = sys_set_int(CAMERA_BACK_PATH"/brightness", brt);
 	if (r < 0) {
-		_E("fail to set brightness : %s", strerror(r));
+		_E("fail to set brightness (errno:%d)", r);
 		return r;
 	}
 
