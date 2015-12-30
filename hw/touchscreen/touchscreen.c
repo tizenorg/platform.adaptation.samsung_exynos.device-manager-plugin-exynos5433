@@ -47,7 +47,7 @@ static int touchscreen_probe(void)
 
 	d = opendir(INPUT_PATH);
 	if (!d)
-		return NULL;
+		return -errno;
 
 	while (readdir_r(d, &entry, &dir) == 0 && dir != NULL) {
 		if (dir->d_name[0] == '.')
