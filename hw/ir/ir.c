@@ -87,7 +87,7 @@ static int ir_transmit(int *frequency_pattern, int size)
 
 	len = (size - 1) * 4;
 	j = 0;
-	pattern  = (uint8_t *)malloc(sizeof(uint8_t) * len);
+	pattern  = (uint8_t *)calloc(1, sizeof(uint8_t) * len);
 	for (i = 1; i < size; i++) {
 		pattern[j] = (uint8_t)(((unsigned int)frequency_pattern[i]) >> 0);
 		pattern[++j] = (uint8_t)(((unsigned int)frequency_pattern[i]) >> 8);
