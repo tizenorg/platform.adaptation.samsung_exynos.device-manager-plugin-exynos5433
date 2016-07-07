@@ -30,7 +30,7 @@
 #define BACKLIGHT_PATH  "/sys/class/backlight/s6e3ha2"
 #endif
 
-static int get_max_brightness(int *val)
+static int display_get_max_brightness(int *val)
 {
 	static int max = -1;
 	int r;
@@ -69,21 +69,20 @@ static int display_get_brightness(int *brightness)
 
 static int display_set_brightness(int brightness)
 {
-	int r, v, max;
+	int r, max;
 
-	if (brightness < 0 || brightness > 100) {
-		_E("wrong parameter");
-		return -EINVAL;
-	}
-
-	r = get_max_brightness(&max);
+	r = display_get_max_brightness(&max);
 	if (r < 0) {
 		_E("fail to get max brightness (errno:%d)", r);
 		return r;
 	}
 
-	v = brightness/100.f*max;
-	r = sys_set_int(BACKLIGHT_PATH"/brightness", v);
+	if (brightness < 0 || brightness > max) {
+		_E("wrong parameter");
+		return -EINVAL;
+	}
+
+	r = sys_set_int(BACKLIGHT_PATH"/brightness", brightness);
 	if (r < 0) {
 		_E("fail to set brightness (errno:%d)", r);
 		return r;
@@ -105,6 +104,7 @@ static int display_open(struct hw_info *info,
 		return -ENOMEM;
 
 	display_dev->common.info = info;
+	display_dev->get_max_brightness = display_get_max_brightness;
 	display_dev->get_brightness = display_get_brightness;
 	display_dev->set_brightness = display_set_brightness;
 
